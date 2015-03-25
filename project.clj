@@ -1,10 +1,10 @@
-(defproject cats/cats-channel "0.4.0-SNAPSHOT"
+(defproject cats/cats-channel "0.1.0"
   :description "Category Theory abstractions for Clojure"
   :url "https://github.com/funcool/cats-channel"
   :license {:name "BSD (2 Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [cats "0.4.0-SNAPSHOT"]]
+                 [cats "0.4.0"]]
   :deploy-repositories {"releases" :clojars
                         "snapshots" :clojars}
 
