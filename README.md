@@ -4,14 +4,13 @@
 
 A channel monad for [cats library](https://github.com/funcool/cats).
 
-
 ## Install ##
 
-The simplest way to use _cats_ in a Clojure project is by including
+The simplest way to use _cats-channel_ in a Clojure project is by including
 it as a dependency in your *_project.clj_*:
 
 ```clojure
-[cats/cats-channel "0.4.0-SNAPSHOT"]
+[cats/cats-channel "0.1.0"]
 ```
 
 ## Getting Started ##
@@ -25,8 +24,9 @@ monads for short-circuiting async computations that may fail.
 Let's start using channel as a functor:
 
 ```clojure
-(require '[cljs.core.async :refer [chan put! <!!]])
+(require '[cats.core :as m])
 (require '[cats.monad.channel :as channel])
+(require '[cljs.core.async :refer [chan put! <!!]])
 
 ;; Declare arbitrary channel with initial value
 (def mychan (channel/with-value 2))
