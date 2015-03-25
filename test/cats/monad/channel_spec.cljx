@@ -19,12 +19,6 @@
             [cats.monad.either :as either]
             [cats.core :as m]))
 
-(defn chan-with-value
-  [value]
-  (let [c (chan)]
-    (put! c value)
-    c))
-
 #+clj
 (t/deftest channel-as-functor
   (let [ch (m/pure c/channel-monad 1)]
@@ -85,37 +79,63 @@
         (t/is (= 3 (<! r))))
       (done))))
 
+
+#+clj
+(t/deftest first-monad-law-left-identity
+  (let [ch1 (m/pure c/channel-monad 4)
+        ch2 (m/pure c/channel-monad 4)
+        vl  (m/>>= ch2 c/with-value)]
+    (t/is (= (<!! ch1)
+             (<!! vl)))))
+
 #+cljs
 (t/deftest first-monad-law-left-identity
   (t/async done
     (go
       (let [ch1 (m/pure c/channel-monad 4)
             ch2 (m/pure c/channel-monad 4)
-            vl  (m/>>= ch2 chan-with-value)]
+            vl  (m/>>= ch2 c/with-value)]
         (t/is (= (<! ch1)
                  (<! vl)))
         (done)))))
+
+#+clj
+(t/deftest second-monad-law-right-identity
+  (let [ch1 (c/with-value 2)
+        rs  (m/>>= (c/with-value 2) m/return)]
+    (t/is (= (<!! ch1) (<!! rs)))))
 
 #+cljs
 (t/deftest second-monad-law-right-identity
   (t/async done
     (go
-      (let [ch1 (chan-with-value 2)
-            rs  (m/>>= (chan-with-value 2) m/return)]
+      (let [ch1 (c/with-value 2)
+            rs  (m/>>= (c/with-value 2) m/return)]
         (t/is (= (<! ch1) (<! rs)))
         (done)))))
+
+#+clj
+(t/deftest third-monad-law-associativity
+  (let [rs1 (m/>>= (m/mlet [x  (c/with-value 2)
+                            y  (c/with-value (inc x))]
+                     (m/return y))
+                   (fn [y] (c/with-value (inc y))))
+        rs2 (m/>>= (c/with-value 2)
+                   (fn [x] (m/>>= (c/with-value (inc x))
+                                  (fn [y] (c/with-value (inc y))))))]
+    (t/is (= (<!! rs1) (<!! rs2)))))
 
 #+cljs
 (t/deftest third-monad-law-associativity
   (t/async done
     (go
-      (let [rs1 (m/>>= (m/mlet [x  (chan-with-value 2)
-                                y  (chan-with-value (inc x))]
+      (let [rs1 (m/>>= (m/mlet [x  (c/with-value 2)
+                                y  (c/with-value (inc x))]
                          (m/return y))
-                       (fn [y] (chan-with-value (inc y))))
-            rs2 (m/>>= (chan-with-value 2)
-                       (fn [x] (m/>>= (chan-with-value (inc x))
-                                      (fn [y] (chan-with-value (inc y))))))]
+                       (fn [y] (c/with-value (inc y))))
+            rs2 (m/>>= (c/with-value 2)
+                       (fn [x] (m/>>= (c/with-value (inc x))
+                                      (fn [y] (c/with-value (inc y))))))]
         (t/is (= (<! rs1) (<! rs2)))
         (done)))))
 
