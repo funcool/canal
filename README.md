@@ -2,7 +2,7 @@
 
 [![Clojars Project](http://clojars.org/cats/cats-channel/latest-version.svg)](http://clojars.org/cats/cats-channel)
 
-A channel monad for cats library.
+A channel monad for [cats library](https://github.com/funcool/cats).
 
 
 ## Install ##
