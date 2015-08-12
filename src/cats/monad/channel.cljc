@@ -24,21 +24,12 @@
 ;; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns cats.monad.channel
-  #+cljs
-  (:require-macros [cljs.core.async.macros :refer [go]])
-
-  #+cljs
-  (:require [cljs.core.async :refer [chan put! take! <! pipe]]
-            [cljs.core.async.impl.channels :as implch]
-            [cljs.core.async.impl.protocols :as impl]
-            [cljs.core.async.impl.dispatch :as dispatch]
-            [cats.core :as m :include-macros true]
-            [cats.protocols :as proto])
-
-  #+clj
-  (:require [clojure.core.async :refer [go chan put! take! <! pipe]]
-            [clojure.core.async.impl.protocols :as impl]
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require #?(:clj  [clojure.core.async :refer [chan go pipe put! take! <!]]
+               :cljs [cljs.core.async :refer [chan pipe put! take! <!]])
             [clojure.core.async.impl.dispatch :as dispatch]
+            [clojure.core.async.impl.protocols :as impl]
+            [cats.context :as ctx]
             [cats.core :as m]
             [cats.protocols :as proto]))
 
@@ -51,13 +42,13 @@
   (reify
     proto/Functor
     (fmap [mn f mv]
-      (let [ctx m/*context*
+      (let [ctx (ctx/get-current)
             channel (chan)]
         (take! mv (fn [v]
                     (put! channel
                           ;; Set double monad for handle properly
                           ;; monad transformers
-                          (m/with-monad ctx
+                          (ctx/with-context ctx
                             (f v)))))
         channel))
 
@@ -79,15 +70,15 @@
         channel))
 
     (mbind [mn mv f]
-      (let [ctx m/*context*
+      (let [ctx (ctx/get-current)
             ch (chan)]
         (take! mv (fn [v]
-                    (m/with-monad ctx
+                    (ctx/with-context ctx
                       (pipe (f v) ch))))
         ch))))
 
-(extend-type #+clj clojure.core.async.impl.channels.ManyToManyChannel
-             #+cljs cljs.core.async.impl.channels.ManyToManyChannel
+(extend-type #?(:clj  clojure.core.async.impl.channels.ManyToManyChannel
+                :cljs cljs.core.async.impl.channels.ManyToManyChannel)
   proto/Context
   (get-context [_] channel-monad))
 
