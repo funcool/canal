@@ -1,10 +1,10 @@
-(defproject cats/cats-channel "0.1.0"
+(defproject cats/cats-channel "0.2.0-SNAPSHOT"
   :description "Category Theory abstractions for Clojure"
-  :url "https://github.com/funcool/cats-channel"
+  :url "https://github.com/funcool/canal"
   :license {:name "BSD (2 Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [cats "0.4.0"]]
+                 [funcool/cats "0.6.1"]]
   :deploy-repositories {"releases" :clojars
                         "snapshots" :clojars}
 
@@ -40,8 +40,8 @@
 
   :jar-exclusions [#"\.cljx|\.swp|\.swo|user.clj"]
 
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
-                                  [org.clojure/clojurescript "0.0-3126"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.7.0"]
+                                  [org.clojure/clojurescript "1.7.48"]
                                   [funcool/cljs-testrunners "0.1.0-SNAPSHOT"]]
                    :plugins [[org.clojars.cemerick/cljx "0.6.0-SNAPSHOT"
                               :exclusions [org.clojure/clojure]]
