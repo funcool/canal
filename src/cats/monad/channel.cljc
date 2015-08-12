@@ -31,7 +31,7 @@
             [clojure.core.async.impl.protocols :as impl]
             [cats.context :as ctx]
             [cats.core :as m]
-            [cats.protocols :as proto]))
+            [cats.protocols :as p]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Monad definition
@@ -40,7 +40,6 @@
 (def ^{:no-doc true}
   channel-monad
   (reify
-    proto/Functor
     (fmap [mn f mv]
       (let [ctx (ctx/get-current)
             channel (chan)]
@@ -50,9 +49,10 @@
                           ;; monad transformers
                           (ctx/with-context ctx
                             (f v)))))
+    p/Functor
         channel))
 
-    proto/Applicative
+    p/Applicative
     (pure [_ v]
       (let [channel (chan)]
         (put! channel v)
@@ -61,15 +61,15 @@
     (fapply [mn af av]
       (go
         (let [afv (<! af)]
-          (<! (proto/fmap mn afv av)))))
+          (<! (p/fmap mn afv av)))))
 
-    proto/Monad
+    p/Monad
     (mreturn [_ v]
       (let [channel (chan)]
         (put! channel v)
         channel))
 
-    (mbind [mn mv f]
+    (mbind [_ mv f]
       (let [ctx (ctx/get-current)
             ch (chan)]
         (take! mv (fn [v]
@@ -79,7 +79,7 @@
 
 (extend-type #?(:clj  clojure.core.async.impl.channels.ManyToManyChannel
                 :cljs cljs.core.async.impl.channels.ManyToManyChannel)
-  proto/Context
+  p/Context
   (get-context [_] channel-monad))
 
 (defn with-value
