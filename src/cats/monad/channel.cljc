@@ -40,16 +40,10 @@
 (def ^{:no-doc true}
   channel-monad
   (reify
-    (fmap [mn f mv]
-      (let [ctx (ctx/get-current)
-            channel (chan)]
-        (take! mv (fn [v]
-                    (put! channel
-                          ;; Set double monad for handle properly
-                          ;; monad transformers
-                          (ctx/with-context ctx
-                            (f v)))))
     p/Functor
+    (fmap [_ f mv]
+      (let [channel (chan)]
+        (take! mv (fn [v] (put! channel (f v))))
         channel))
 
     p/Applicative
