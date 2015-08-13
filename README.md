@@ -1,5 +1,7 @@
 # cats-channels #
 
+**Deprecated**: The new version is now merged into cats library.
+
 [![Clojars Project](http://clojars.org/cats/cats-channel/latest-version.svg)](http://clojars.org/cats/cats-channel)
 
 A channel monad for [cats library](https://github.com/funcool/cats). It works with both, Clojure and
