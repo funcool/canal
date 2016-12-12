@@ -24,23 +24,14 @@
 ;; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns cats.monad.channel
-  #+cljs
-  (:require-macros [cljs.core.async.macros :refer [go]])
-
-  #+cljs
-  (:require [cljs.core.async :refer [chan put! take! <! pipe]]
-            [cljs.core.async.impl.channels :as implch]
-            [cljs.core.async.impl.protocols :as impl]
-            [cljs.core.async.impl.dispatch :as dispatch]
-            [cats.core :as m :include-macros true]
-            [cats.protocols :as proto])
-
-  #+clj
-  (:require [clojure.core.async :refer [go chan put! take! <! pipe]]
-            [clojure.core.async.impl.protocols :as impl]
+  #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require #?(:clj  [clojure.core.async :refer [chan go pipe put! take! <!]]
+               :cljs [cljs.core.async :refer [chan pipe put! take! <!]])
             [clojure.core.async.impl.dispatch :as dispatch]
+            [clojure.core.async.impl.protocols :as impl]
+            [cats.context :as ctx]
             [cats.core :as m]
-            [cats.protocols :as proto]))
+            [cats.protocols :as p]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Monad definition
@@ -49,19 +40,13 @@
 (def ^{:no-doc true}
   channel-monad
   (reify
-    proto/Functor
-    (fmap [mn f mv]
-      (let [ctx m/*context*
-            channel (chan)]
-        (take! mv (fn [v]
-                    (put! channel
-                          ;; Set double monad for handle properly
-                          ;; monad transformers
-                          (m/with-monad ctx
-                            (f v)))))
+    p/Functor
+    (fmap [_ f mv]
+      (let [channel (chan)]
+        (take! mv (fn [v] (put! channel (f v))))
         channel))
 
-    proto/Applicative
+    p/Applicative
     (pure [_ v]
       (let [channel (chan)]
         (put! channel v)
@@ -70,25 +55,25 @@
     (fapply [mn af av]
       (go
         (let [afv (<! af)]
-          (<! (proto/fmap mn afv av)))))
+          (<! (p/fmap mn afv av)))))
 
-    proto/Monad
+    p/Monad
     (mreturn [_ v]
       (let [channel (chan)]
         (put! channel v)
         channel))
 
-    (mbind [mn mv f]
-      (let [ctx m/*context*
+    (mbind [_ mv f]
+      (let [ctx (ctx/get-current)
             ch (chan)]
         (take! mv (fn [v]
-                    (m/with-monad ctx
+                    (ctx/with-context ctx
                       (pipe (f v) ch))))
         ch))))
 
-(extend-type #+clj clojure.core.async.impl.channels.ManyToManyChannel
-             #+cljs cljs.core.async.impl.channels.ManyToManyChannel
-  proto/Context
+(extend-type #?(:clj  clojure.core.async.impl.channels.ManyToManyChannel
+                :cljs cljs.core.async.impl.channels.ManyToManyChannel)
+  p/Context
   (get-context [_] channel-monad))
 
 (defn with-value
